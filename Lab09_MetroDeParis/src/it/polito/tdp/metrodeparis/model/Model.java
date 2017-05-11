@@ -71,20 +71,13 @@ private List<Fermata> getPercorso(Fermata partenza, Fermata arrivo) {
 		else if(percorsoVertici.get(percorsoVertici.size()-1).equals(f2)){   //il grafo non è orientato perciò source e target del grafo sono a caso
 			percorsoVertici.add(f1);
 		}
-		tempoPercorrenza+=(grafoPercorso.getEdgeWeight(dwe)/calcolaVelocitaArco(f1,f2))*3600;  //distanza / velocitaMedia(suppongo 40km/h) * 3600 in secondi
+		tempoPercorrenza+=(grafoPercorso.getEdgeWeight(dwe))*3600;  //distanza / velocitaMedia(suppongo 40km/h) * 3600 in secondi
 	    tempoPercorrenza+=30;
 	}
 
 	return percorsoVertici;
 	
 
-}
-
-
-
-private double calcolaVelocitaArco(Fermata f1,Fermata f2) {
-	MetroDAO mDAO= new MetroDAO(); 
-	return mDAO.getVelocitaLinea(f1,f2);
 }
 
 
@@ -99,7 +92,7 @@ public void generaGrafo() {
 			List<Fermata> adiacenti = mDAO.getListaFermateAdiacenti(f) ;
 			for(Fermata f2: adiacenti){
 			DefaultWeightedEdge e= grafoPercorso.addEdge(f, f2) ;
-			grafoPercorso.setEdgeWeight(e, CalcolaDistanza(f.getCoords(),f2.getCoords()));
+			grafoPercorso.setEdgeWeight(e, CalcolaPeso(f,f2));
 			}
 	 
 	 }
@@ -107,8 +100,13 @@ public void generaGrafo() {
 
 
 
-private double CalcolaDistanza(LatLng coords, LatLng coords2) {
-	return LatLngTool.distance(coords,coords2, LengthUnit.KILOMETER) ;
+private double CalcolaPeso(Fermata f1, Fermata f2) {
+	
+	double distanza=LatLngTool.distance(f1.getCoords(),f2.getCoords(), LengthUnit.KILOMETER);
+	MetroDAO mDAO= new MetroDAO(); 
+	double velocitaLinea= mDAO.getVelocitaLinea(f1,f2);
+	
+	return  distanza/velocitaLinea;
 }
 
 
@@ -131,6 +129,35 @@ if(secStr.length()<2)
 
 return (hStr+":"+minStr+":"+secStr);
 }
+
+
+
+
+//es 2
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 }
 	
 	
