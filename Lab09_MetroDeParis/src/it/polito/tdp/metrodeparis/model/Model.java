@@ -10,6 +10,7 @@ import org.jgrapht.Graphs;
 import org.jgrapht.WeightedGraph;
 import org.jgrapht.alg.DijkstraShortestPath;
 import org.jgrapht.graph.DefaultWeightedEdge;
+import org.jgrapht.graph.DirectedWeightedMultigraph;
 import org.jgrapht.graph.WeightedMultigraph;
 import org.jgrapht.traverse.BreadthFirstIterator;
 
@@ -22,8 +23,10 @@ import it.polito.tdp.metrodeparis.dao.MetroDAO;
 
 public class Model {
  
-private List<Fermata> listaTotFermate;
- private  WeightedGraph<Fermata,DefaultWeightedEdge> grafoPercorso;
+  private List<Fermata> listaTotFermate;
+  private List<SimpleFermata> listaTotSimpleFermate;
+  
+ private  DirectedWeightedMultigraph<Fermata,DefaultWeightedEdge> grafoPercorso;
   private int tempoPercorrenza;
 	
 	
@@ -35,10 +38,19 @@ private List<Fermata> listaTotFermate;
 		}
 		return listaTotFermate;
 	}
+ 
+  public List<SimpleFermata> getListaSimpleFermate(){
+		if(listaTotSimpleFermate==null){
+         MetroDAO mDAO= new MetroDAO();
+		listaTotSimpleFermate=  mDAO.getAllSimpleFermate();
+		}
+		return listaTotSimpleFermate;
+	}
 
 
 
-public List<Fermata> calcolaPercorso(Fermata partenza, Fermata arrivo) {
+
+public List<Fermata> calcolaPercorso(SimpleFermata partenza, SimpleFermata arrivo) {
 	if(grafoPercorso==null){
 	 generaGrafo();
 	 }
@@ -51,62 +63,92 @@ public List<Fermata> calcolaPercorso(Fermata partenza, Fermata arrivo) {
 
 
 
-private List<Fermata> getPercorso(Fermata partenza, Fermata arrivo) {
+private List<Fermata> getPercorso(SimpleFermata partenza, SimpleFermata arrivo) {
 	if(partenza.equals(arrivo)){
 		return null;
 	}
 	List<DefaultWeightedEdge>percorsoArchi = new ArrayList<DefaultWeightedEdge>();
-	percorsoArchi=DijkstraShortestPath.findPathBetween(grafoPercorso, partenza, arrivo);
-	List<Fermata>percorsoVertici = new ArrayList<Fermata>();
+	List<List<DefaultWeightedEdge>>listaSoluzioni=new ArrayList<List<DefaultWeightedEdge>>();
+	List<Fermata>possibiliPartenze=new ArrayList<Fermata>();
+	List<Fermata>possibiliArrivi=new ArrayList<Fermata>();
+	for(Fermata f: getListaFermate()){
+		if(f.getIdFermata()==partenza.getId()){
+			possibiliPartenze.add(f);
+		}
+		if(f.getIdFermata()==arrivo.getId()){
+			possibiliArrivi.add(f);
+		}	
+	}
+	List<Fermata>percorsoVerticiOttimale = new ArrayList<Fermata>();
 	tempoPercorrenza=0;
 	
-	percorsoVertici.add(partenza);
-	for(DefaultWeightedEdge dwe: percorsoArchi){
-		Fermata f1= grafoPercorso.getEdgeSource(dwe); 
-		Fermata f2= grafoPercorso.getEdgeTarget(dwe);
-
-		if(percorsoVertici.get(percorsoVertici.size()-1).equals(f1)){   //il grafo non è orientato perciò source e target del grafo sono a caso
-			percorsoVertici.add(f2);
-		}
-		else if(percorsoVertici.get(percorsoVertici.size()-1).equals(f2)){   //il grafo non è orientato perciò source e target del grafo sono a caso
-			percorsoVertici.add(f1);
-		}
-		tempoPercorrenza+=(grafoPercorso.getEdgeWeight(dwe))*3600;  //distanza / velocitaMedia(suppongo 40km/h) * 3600 in secondi
-	    tempoPercorrenza+=30;
-	}
-
-	return percorsoVertici;
+	for(Fermata p: possibiliPartenze){
+		for(Fermata a: possibiliArrivi){
+	percorsoArchi=DijkstraShortestPath.findPathBetween(grafoPercorso, p, a);
+	List<Fermata>percorsoVertici = new ArrayList<Fermata>();
+	int temp=0;
 	
+	percorsoVertici.add(p);
+	for(DefaultWeightedEdge dwe: percorsoArchi){
+		Fermata f= grafoPercorso.getEdgeTarget(dwe);
+		percorsoVertici.add(f);
+		temp+=(grafoPercorso.getEdgeWeight(dwe))*3600;  //distanza / velocitaMedia(suppongo 40km/h) * 3600 in secondi
+	    temp+=30;
+	}
+	if(temp>tempoPercorrenza){
+		percorsoVerticiOttimale=percorsoVertici;
+		tempoPercorrenza=temp;
+	}
+	}
+	}
+	return percorsoVerticiOttimale;
 
 }
+	
 
 
 
 public void generaGrafo() {
 	MetroDAO mDAO= new MetroDAO();
 	
-	 grafoPercorso= new WeightedMultigraph<Fermata,DefaultWeightedEdge>(DefaultWeightedEdge.class);
+	 grafoPercorso= new DirectedWeightedMultigraph<Fermata,DefaultWeightedEdge>(DefaultWeightedEdge.class);
 	 Graphs.addAllVertices(grafoPercorso,getListaFermate());
 	 
 	 for(Fermata f: grafoPercorso.vertexSet()) {
 			List<Fermata> adiacenti = mDAO.getListaFermateAdiacenti(f) ;
 			for(Fermata f2: adiacenti){
 			DefaultWeightedEdge e= grafoPercorso.addEdge(f, f2) ;
-			grafoPercorso.setEdgeWeight(e, CalcolaPeso(f,f2));
-			}
-	 
+			grafoPercorso.setEdgeWeight(e, calcolaPeso(f,f2));
+			} 
+	 }
+	 for(Fermata f1: grafoPercorso.vertexSet()){
+		 for(Fermata f2: grafoPercorso.vertexSet()){
+			 if(!f1.equals(f2)&&f1.getIdFermata()==f2.getIdFermata()){
+				 DefaultWeightedEdge e1= grafoPercorso.addEdge(f1, f2);
+				 grafoPercorso.setEdgeWeight(e1,calcolaPeso(f1,f2));
+				 DefaultWeightedEdge e2= grafoPercorso.addEdge(f2, f1);
+				 grafoPercorso.setEdgeWeight(e2,calcolaPeso(f2,f1));	 
+			 }
+			 
+		 }
+		 
+		 
+		 
 	 }
 }
 
-
-
-private double CalcolaPeso(Fermata f1, Fermata f2) {
-	
-	double distanza=LatLngTool.distance(f1.getCoords(),f2.getCoords(), LengthUnit.KILOMETER);
+private double calcolaPeso(Fermata f1, Fermata f2) {
+	double result;
 	MetroDAO mDAO= new MetroDAO(); 
+	if(f1.getNome().compareTo(f2.getNome())==0){
+		result=mDAO.getIntervalloLinea(f1.getLinea())/60;
+	}
+	else{
+	double distanza=LatLngTool.distance(f1.getCoords(),f2.getCoords(), LengthUnit.KILOMETER);
 	double velocitaLinea= mDAO.getVelocitaLinea(f1,f2);
-	
-	return  distanza/velocitaLinea;
+	result=distanza/velocitaLinea;
+	}
+	return  result;
 }
 
 
@@ -133,33 +175,8 @@ return (hStr+":"+minStr+":"+secStr);
 
 
 
-//es 2
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 }
-	
 	
 	
 

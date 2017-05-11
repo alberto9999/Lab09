@@ -7,6 +7,7 @@ import java.util.ResourceBundle;
 
 import it.polito.tdp.metrodeparis.model.Fermata;
 import it.polito.tdp.metrodeparis.model.Model;
+import it.polito.tdp.metrodeparis.model.SimpleFermata;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -25,10 +26,10 @@ public class MetroDeParisController {
     private TextArea txtResult;
 
     @FXML
-    private ComboBox<Fermata> cmbPartenza;
+    private ComboBox<SimpleFermata> cmbPartenza;
 
     @FXML
-    private ComboBox<Fermata> cmbArrivo;
+    private ComboBox<SimpleFermata> cmbArrivo;
 
     @FXML
     private Button btnCalcolaPercorso;
@@ -36,8 +37,8 @@ public class MetroDeParisController {
     Model model;
  	public void setModel(Model model) {
  		this.model=model;
- 		cmbPartenza.getItems().addAll(model.getListaFermate());
- 		cmbArrivo.getItems().addAll(model.getListaFermate());
+ 		cmbPartenza.getItems().addAll(model.getListaSimpleFermate());
+ 		cmbArrivo.getItems().addAll(model.getListaSimpleFermate());
  		
  	}
     
@@ -47,11 +48,15 @@ public class MetroDeParisController {
     void doCalcola(ActionEvent event) {
      if(cmbPartenza.getValue()!=null&&cmbArrivo.getValue()!=null&&cmbPartenza.getValue()!=cmbArrivo.getValue()){
        txtResult.setText("");	
-       Fermata partenza= cmbPartenza.getValue();
-       Fermata arrivo= cmbArrivo.getValue();  
+       SimpleFermata partenza= cmbPartenza.getValue();
+       SimpleFermata arrivo= cmbArrivo.getValue();  
        List<Fermata> percorso= model.calcolaPercorso(partenza,arrivo);
-       
+       int lineaPrec=0;
        for(Fermata f: percorso){
+    	   if(lineaPrec!=f.getLinea()){
+    		   txtResult.appendText("LINEA: "+f.getLinea()+"\n");
+    		   lineaPrec=f.getLinea();
+    	   }
     	   txtResult.appendText(f+"\n");
        }
        txtResult.appendText("\nTEMPO DI PERCORRENZA TOTALE: "+model.calcolaTempoPercorrenza(percorso));
