@@ -38,4 +38,33 @@ public class MetroDAO {
 
 		return fermate;
 	}
+
+	public List<Fermata> getListaFermateAdiacenti(Fermata fermata) {
+		final String sql = "SELECT * "+
+                           "FROM fermata f, connessione c "+
+                           "WHERE f.id_fermata = c.id_stazA AND c.id_stazP=?";
+		List<Fermata> fermate = new ArrayList<Fermata>();
+
+		try {
+			Connection conn = DBConnect.getInstance().getConnection();
+			PreparedStatement st = conn.prepareStatement(sql);
+			st.setInt(1,fermata.getIdFermata());
+			ResultSet rs = st.executeQuery();
+			
+
+			while (rs.next()) {
+				Fermata f = new Fermata(rs.getInt("id_fermata"), rs.getString("nome"), new LatLng(rs.getDouble("coordx"), rs.getDouble("coordy")));
+				fermate.add(f);
+			}
+
+			st.close();
+			conn.close();
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+			throw new RuntimeException("Errore di connessione al Database.");
+		}
+
+		return fermate;
+	}
 }
