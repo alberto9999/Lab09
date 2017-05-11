@@ -116,35 +116,6 @@ public class MetroDAO {
 	}
 
 
-	public double getVelocitaLinea(Fermata f1, Fermata f2) {
-		final String sql = "SELECT  velocita "+
-                "FROM linea l, connessione c "+
-                "WHERE l.id_linea = c.id_linea AND c.id_stazP=? AND c.id_stazA=?";
-		double velocita=0;
-
-try {
-	Connection conn = DBConnect.getInstance().getConnection();
-	PreparedStatement st = conn.prepareStatement(sql);
-	st.setInt(1,f1.getIdFermata());
-	st.setInt(2,f2.getIdFermata());
-	ResultSet rs = st.executeQuery();
-	
-
-	if (rs.next()) {
-		velocita=rs.getDouble("velocita");
-	}
-
-	st.close();
-	conn.close();
-
-} catch (SQLException e) {
-	e.printStackTrace();
-	throw new RuntimeException("Errore di connessione al Database.");
-}
-
-return velocita;
-	}
-
 
 	
 	

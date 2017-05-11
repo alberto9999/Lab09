@@ -55,7 +55,7 @@ public class MetroDeParisController {
        String fermataPrec="";
        for(Fermata f: percorso){
     	   if(lineaPrec!=f.getLinea()){
-    		   txtResult.appendText("\nLINEA: "+f.getLinea()+"\n");
+    		   txtResult.appendText("\nLINEA: "+model.NomeDaIdLinea(f.getLinea())+"\n");
     		   lineaPrec=f.getLinea();
     	   }
     	   if(fermataPrec.compareTo(f.getNome())!=0){

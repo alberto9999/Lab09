@@ -23,11 +23,11 @@ import it.polito.tdp.metrodeparis.dao.MetroDAO;
 
 public class Model {
  
-  private List<Fermata> listaTotFermate;
-  private List<SimpleFermata> listaTotSimpleFermate;
-  private Map <Integer,Linea>mappaLinee=null;
- private  DirectedWeightedMultigraph<Fermata,DefaultWeightedEdge> grafoPercorso;
-  private int tempoPercorrenza;
+ private List<Fermata> listaTotFermate;
+ private List<SimpleFermata> listaTotSimpleFermate;
+ private Map <Integer,Linea>mappaLinee=null;
+ private  DirectedWeightedMultigraph<Fermata,DefaultWeightedEdge> grafoPercorso=null;
+ private int tempoPercorrenza;
 	
 	
   
@@ -144,13 +144,12 @@ public void generaGrafo() {
 
 private double calcolaPeso(Fermata f1, Fermata f2) {
 	double result;
-	MetroDAO mDAO= new MetroDAO(); 
-	if(f1.getNome().compareTo(f2.getNome())==0){
-		result=(mappaLinee.get(f1.getLinea()).getIntervallo())/60;
+	if(f1.getIdFermata()==f2.getIdFermata()){
+		result=(mappaLinee.get(f2.getLinea()).getIntervallo())/60;  //trasformo in ore
 	}
 	else{
 	double distanza=LatLngTool.distance(f1.getCoords(),f2.getCoords(), LengthUnit.KILOMETER);
-	double velocitaLinea= mDAO.getVelocitaLinea(f1,f2);
+	double velocitaLinea= mappaLinee.get(f1.getLinea()).getVelocita();
 	result=distanza/velocitaLinea;
 	}
 	return  result;
@@ -176,6 +175,14 @@ if(secStr.length()<2)
 
 return (hStr+":"+minStr+":"+secStr);
 }
+
+public String NomeDaIdLinea(int linea) {
+	
+	return mappaLinee.get(linea).getNome();
+}
+
+
+
 
 
 }
