@@ -5,11 +5,14 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.javadocmd.simplelatlng.LatLng;
 
 import it.polito.tdp.metrodeparis.model.Fermata;
+import it.polito.tdp.metrodeparis.model.Linea;
 import it.polito.tdp.metrodeparis.model.SimpleFermata;
 
 
@@ -142,22 +145,23 @@ try {
 return velocita;
 	}
 
-	public double getIntervalloLinea(int linea) {
-		final String sql = "SELECT  intervallo "+
-                "FROM linea "+
-                "WHERE id_linea=?";
 
-		double intervallo=0;
+	
+	
+	
+	public Map<Integer, Linea> getListaLinee() {
+		final String sql = "SELECT  * "+
+                "FROM linea";
+    Map<Integer,Linea>listaLinee=new HashMap<Integer,Linea>();            
 try {
 	Connection conn = DBConnect.getInstance().getConnection();
 	PreparedStatement st = conn.prepareStatement(sql);
-	st.setInt(1,linea);
 	
 	ResultSet rs = st.executeQuery();
 	
 
-	if (rs.next()) {
-		intervallo=rs.getDouble("intervallo");
+	while(rs.next()) {
+		listaLinee.put(rs.getInt("id_linea"), new Linea(rs.getInt("id_linea"),rs.getString("nome"),rs.getDouble("velocita"),rs.getDouble("intervallo"),rs.getString("colore")));
 	}
 
 	st.close();
@@ -168,6 +172,9 @@ try {
 	throw new RuntimeException("Errore di connessione al Database.");
 }
 
-return intervallo;
+return listaLinee;
 	}
+
+
+
 }

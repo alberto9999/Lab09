@@ -25,7 +25,7 @@ public class Model {
  
   private List<Fermata> listaTotFermate;
   private List<SimpleFermata> listaTotSimpleFermate;
-  
+  private Map <Integer,Linea>mappaLinee=null;
  private  DirectedWeightedMultigraph<Fermata,DefaultWeightedEdge> grafoPercorso;
   private int tempoPercorrenza;
 	
@@ -51,9 +51,15 @@ public class Model {
 
 
 public List<Fermata> calcolaPercorso(SimpleFermata partenza, SimpleFermata arrivo) {
+	if(mappaLinee==null){
+		MetroDAO mDAO = new MetroDAO();
+		mappaLinee=mDAO.getListaLinee();
+	}
+	
 	if(grafoPercorso==null){
 	 generaGrafo();
 	 }
+	
 	List<Fermata> percorso= new ArrayList<Fermata>();
 	percorso=getPercorso(partenza,arrivo);
 	
@@ -62,13 +68,12 @@ public List<Fermata> calcolaPercorso(SimpleFermata partenza, SimpleFermata arriv
 }
 
 
-
 private List<Fermata> getPercorso(SimpleFermata partenza, SimpleFermata arrivo) {
 	if(partenza.equals(arrivo)){
 		return null;
 	}
 	List<DefaultWeightedEdge>percorsoArchi = new ArrayList<DefaultWeightedEdge>();
-	List<List<DefaultWeightedEdge>>listaSoluzioni=new ArrayList<List<DefaultWeightedEdge>>();
+
 	List<Fermata>possibiliPartenze=new ArrayList<Fermata>();
 	List<Fermata>possibiliArrivi=new ArrayList<Fermata>();
 	for(Fermata f: getListaFermate()){
@@ -80,7 +85,7 @@ private List<Fermata> getPercorso(SimpleFermata partenza, SimpleFermata arrivo) 
 		}	
 	}
 	List<Fermata>percorsoVerticiOttimale = new ArrayList<Fermata>();
-	tempoPercorrenza=0;
+	tempoPercorrenza=999999999;
 	
 	for(Fermata p: possibiliPartenze){
 		for(Fermata a: possibiliArrivi){
@@ -95,7 +100,7 @@ private List<Fermata> getPercorso(SimpleFermata partenza, SimpleFermata arrivo) 
 		temp+=(grafoPercorso.getEdgeWeight(dwe))*3600;  //distanza / velocitaMedia(suppongo 40km/h) * 3600 in secondi
 	    temp+=30;
 	}
-	if(temp>tempoPercorrenza){
+	if(temp<=tempoPercorrenza){
 		percorsoVerticiOttimale=percorsoVertici;
 		tempoPercorrenza=temp;
 	}
@@ -141,7 +146,7 @@ private double calcolaPeso(Fermata f1, Fermata f2) {
 	double result;
 	MetroDAO mDAO= new MetroDAO(); 
 	if(f1.getNome().compareTo(f2.getNome())==0){
-		result=mDAO.getIntervalloLinea(f1.getLinea())/60;
+		result=(mappaLinee.get(f1.getLinea()).getIntervallo())/60;
 	}
 	else{
 	double distanza=LatLngTool.distance(f1.getCoords(),f2.getCoords(), LengthUnit.KILOMETER);
@@ -171,9 +176,6 @@ if(secStr.length()<2)
 
 return (hStr+":"+minStr+":"+secStr);
 }
-
-
-
 
 
 }

@@ -52,12 +52,16 @@ public class MetroDeParisController {
        SimpleFermata arrivo= cmbArrivo.getValue();  
        List<Fermata> percorso= model.calcolaPercorso(partenza,arrivo);
        int lineaPrec=0;
+       String fermataPrec="";
        for(Fermata f: percorso){
     	   if(lineaPrec!=f.getLinea()){
-    		   txtResult.appendText("LINEA: "+f.getLinea()+"\n");
+    		   txtResult.appendText("\nLINEA: "+f.getLinea()+"\n");
     		   lineaPrec=f.getLinea();
     	   }
+    	   if(fermataPrec.compareTo(f.getNome())!=0){
     	   txtResult.appendText(f+"\n");
+    	   fermataPrec=f.getNome();
+    	   }
        }
        txtResult.appendText("\nTEMPO DI PERCORRENZA TOTALE: "+model.calcolaTempoPercorrenza(percorso));
      }
