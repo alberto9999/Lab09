@@ -71,13 +71,20 @@ private List<Fermata> getPercorso(Fermata partenza, Fermata arrivo) {
 		else if(percorsoVertici.get(percorsoVertici.size()-1).equals(f2)){   //il grafo non è orientato perciò source e target del grafo sono a caso
 			percorsoVertici.add(f1);
 		}
-		tempoPercorrenza+=(grafoPercorso.getEdgeWeight(dwe)/50)*3600;  //distanza / velocitaMedia(suppongo 50km/h) * 3600 in secondi
+		tempoPercorrenza+=(grafoPercorso.getEdgeWeight(dwe)/calcolaVelocitaArco(f1,f2))*3600;  //distanza / velocitaMedia(suppongo 40km/h) * 3600 in secondi
 	    tempoPercorrenza+=30;
 	}
 
 	return percorsoVertici;
 	
 
+}
+
+
+
+private double calcolaVelocitaArco(Fermata f1,Fermata f2) {
+	MetroDAO mDAO= new MetroDAO(); 
+	return mDAO.getVelocitaLinea(f1,f2);
 }
 
 
